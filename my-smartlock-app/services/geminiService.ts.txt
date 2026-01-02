@@ -23,7 +23,13 @@ export const generateVisualizedDoor = async (
   doorImageBase64: string,
   lockReferenceUrl: string
 ): Promise<string> => {
-  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || '' });
+  // 确保能拿到 API_KEY
+  const apiKey = process.env.API_KEY;
+  if (!apiKey) {
+    throw new Error("API_KEY is missing in environment variables.");
+  }
+  
+  const ai = new GoogleGenAI({ apiKey });
   const doorData = doorImageBase64.split(',')[1] || doorImageBase64;
   const lockInfo = await imageUrlToBase64(lockReferenceUrl);
 
@@ -54,7 +60,7 @@ export const generateVisualizedDoor = async (
         return `data:image/png;base64,${part.inlineData.data}`;
       }
     }
-    throw new Error("No result image.");
+    throw new Error("No image part returned from AI.");
   } catch (error: any) {
     console.error("AI Error:", error);
     throw error;
