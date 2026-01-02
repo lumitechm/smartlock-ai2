@@ -6,6 +6,10 @@ export default defineConfig({
     'process.env.API_KEY': JSON.stringify(process.env.API_KEY)
   },
   build: {
-    outDir: 'dist'
+    outDir: 'dist',
+    sourcemap: false
+  },
+  server: {
+    port: 3000
   }
 });
