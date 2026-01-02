@@ -23,10 +23,10 @@ export const generateVisualizedDoor = async (
   doorImageBase64: string,
   lockReferenceUrl: string
 ): Promise<string> => {
-  // 确保能拿到 API_KEY
+  // Use the defined process.env.API_KEY from vite.config.ts
   const apiKey = process.env.API_KEY;
   if (!apiKey) {
-    throw new Error("API_KEY is missing in environment variables.");
+    throw new Error("API_KEY is missing. Please set it in Vercel Environment Variables.");
   }
   
   const ai = new GoogleGenAI({ apiKey });
@@ -35,12 +35,12 @@ export const generateVisualizedDoor = async (
 
   const prompt = `
     ROLE: Professional Architectural Visualizer.
-    TASK: Perfectly replicate the smart lock from REFERENCE onto the TARGET door.
-    STRICT RULES:
-    1. CLONE the exact silhouette of the lock in REFERENCE.
-    2. If REFERENCE is push-pull (no handle), DO NOT add any handle.
-    3. REMOVE any existing handles on the TARGET door.
-    4. Match metallic finish (gold/black/copper) and perspective perfectly.
+    TASK: Replicate the smart lock from the provided REFERENCE image onto the target DOOR image.
+    RULES:
+    1. Clone the EXACT design and shape of the lock.
+    2. Match the door's lighting, shadows, and perspective.
+    3. Remove any existing handle or lock on the original door.
+    4. If the reference lock has no handle (push-pull), DO NOT add one.
   `;
 
   try {
@@ -60,9 +60,9 @@ export const generateVisualizedDoor = async (
         return `data:image/png;base64,${part.inlineData.data}`;
       }
     }
-    throw new Error("No image part returned from AI.");
+    throw new Error("AI failed to return an image. Try a different photo.");
   } catch (error: any) {
-    console.error("AI Error:", error);
+    console.error("Gemini API Error:", error);
     throw error;
   }
 };
