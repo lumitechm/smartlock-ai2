@@ -1,0 +1,62 @@
+
+import { GoogleGenAI } from "@google/genai";
+
+async function imageUrlToBase64(url: string): Promise<{ data: string, mimeType: string }> {
+  try {
+    const response = await fetch(url);
+    const blob = await response.blob();
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64String = (reader.result as string).split(',')[1];
+        resolve({ data: base64String, mimeType: blob.type });
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(blob);
+    });
+  } catch (error) {
+    throw new Error("Could not process the lock reference image.");
+  }
+}
+
+export const generateVisualizedDoor = async (
+  doorImageBase64: string,
+  lockReferenceUrl: string
+): Promise<string> => {
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || '' });
+  const doorData = doorImageBase64.split(',')[1] || doorImageBase64;
+  const lockInfo = await imageUrlToBase64(lockReferenceUrl);
+
+  const prompt = `
+    ROLE: Professional Architectural Visualizer.
+    TASK: Perfectly replicate the smart lock from REFERENCE onto the TARGET door.
+    STRICT RULES:
+    1. CLONE the exact silhouette of the lock in REFERENCE.
+    2. If REFERENCE is push-pull (no handle), DO NOT add any handle.
+    3. REMOVE any existing handles on the TARGET door.
+    4. Match metallic finish (gold/black/copper) and perspective perfectly.
+  `;
+
+  try {
+    const response = await ai.models.generateContent({
+      model: 'gemini-2.5-flash-image',
+      contents: {
+        parts: [
+          { inlineData: { data: doorData, mimeType: 'image/png' } },
+          { inlineData: { data: lockInfo.data, mimeType: lockInfo.mimeType } },
+          { text: prompt },
+        ],
+      }
+    });
+
+    for (const part of response.candidates?.[0]?.content?.parts || []) {
+      if (part.inlineData) {
+        return `data:image/png;base64,${part.inlineData.data}`;
+      }
+    }
+    throw new Error("No result image.");
+  } catch (error: any) {
+    console.error("AI Error:", error);
+    throw error;
+  }
+};

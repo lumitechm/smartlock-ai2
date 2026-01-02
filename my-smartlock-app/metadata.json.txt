@@ -1,0 +1,6 @@
+
+{
+  "name": "SmartLock AI Visualizer",
+  "description": "Upload a photo of your door and instantly visualize smart locks.",
+  "requestFramePermissions": ["camera"]
+}
