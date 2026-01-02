@@ -7,9 +7,7 @@ export default defineConfig({
   },
   build: {
     outDir: 'dist',
-    sourcemap: false
-  },
-  server: {
-    port: 3000
+    minify: 'esbuild',
+    reportCompressedSize: false
   }
 });
